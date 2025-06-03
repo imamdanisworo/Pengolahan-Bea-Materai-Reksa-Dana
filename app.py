@@ -70,6 +70,26 @@ if uploaded_txt_files and st.button("Process Files"):
 
         preview_df = combined_df.copy()
 
+        # Add custom Materai description column
+        if 'Transaction Type' in preview_df.columns and 'Transaction Date' in preview_df.columns:
+            def build_description(row):
+                ttype = str(row['Transaction Type'])
+                if 'SUBSCR' in ttype.upper():
+                    label = 'Subscr'
+                elif 'REDEMP' in ttype.upper():
+                    label = 'Redemp'
+                else:
+                    label = ttype[:6]
+                try:
+                    date_str = str(row['Transaction Date'])
+                    date_fmt = pd.to_datetime(date_str, format='%Y%m%d')
+                    date_out = date_fmt.strftime('%d %B %Y')
+                except:
+                    date_out = date_str
+                return f"Materai - {label} at {date_out}"
+
+            preview_df['Description'] = preview_df.apply(build_description, axis=1)
+
         # Fix formatting in 'Account' column only for preview table
         if 'Account' in preview_df.columns:
             def clean_account(val):
