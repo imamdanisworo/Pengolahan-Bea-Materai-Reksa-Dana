@@ -39,14 +39,14 @@ if uploaded_files:
             combined_df.drop(columns=['No.'], inplace=True)
         combined_df.insert(0, 'No.', range(1, len(combined_df) + 1))
 
-        # Format numeric columns with optional decimals
+        # Format numeric columns with optional full decimals
         def format_number(val):
             try:
                 val = float(val)
                 if val.is_integer():
                     return f"{int(val):,}"
                 else:
-                    return f"{val:,.2f}"
+                    return f"{val:,.{str(val)[::-1].find('.') if '.' in str(val) else 2}f}".rstrip('0').rstrip('.')
             except:
                 return ""
 
