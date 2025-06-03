@@ -1,4 +1,4 @@
-# Final locked version with auto-clear after download
+# Final locked version (no reset upload)
 import streamlit as st
 import pandas as pd
 import io
@@ -9,18 +9,18 @@ st.title("Combine Multiple TXT Files into One Excel Sheet with Lookup")
 
 st.markdown("""
 Upload multiple `.txt` files (pipe `|` separated). Then upload an Excel file for SID-Account lookup.
-Click **Process Files** to preview and download the results. After download, files will auto-clear.
+Click **Process Files** to preview and download the results.
 """)
 
 col1, col2 = st.columns(2)
 
 with col1:
     st.subheader("Upload TXT Files")
-    uploaded_txt_files = st.file_uploader("TXT files", type="txt", accept_multiple_files=True, key=str(st.session_state.get('txt_key', 'txt')))
+    uploaded_txt_files = st.file_uploader("TXT files", type="txt", accept_multiple_files=True)
 
 with col2:
     st.subheader("Upload Excel Lookup File")
-    uploaded_lookup_file = st.file_uploader("Excel file for SID lookup", type=["xlsx", "xls"], key=str(st.session_state.get('lookup_key', 'lookup')))
+    uploaded_lookup_file = st.file_uploader("Excel file for SID lookup", type=["xlsx", "xls"])
 
 if uploaded_txt_files and st.button("Process Files"):
     combined_df = pd.concat([
@@ -105,17 +105,12 @@ if uploaded_txt_files and st.button("Process Files"):
                 worksheet.set_column(col_idx, col_idx, max_len)
 
     output.seek(0)
-    download_clicked = st.download_button(
+    st.download_button(
         label="Download Combined Excel File",
         data=output,
         file_name="combined_data.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
-
-    if download_clicked:
-        st.session_state.txt_key = 'txt' + str(pd.Timestamp.now().timestamp())
-        st.session_state.lookup_key = 'lookup' + str(pd.Timestamp.now().timestamp())
-        st.experimental_rerun()
 else:
     if not uploaded_txt_files:
         st.info("Please upload one or more .txt files to begin.")
