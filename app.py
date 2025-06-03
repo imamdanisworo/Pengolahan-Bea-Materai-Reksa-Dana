@@ -47,14 +47,6 @@ if uploaded_txt_files and st.button("Process Files"):
             combined_df.drop(columns=['No.'], inplace=True)
         combined_df.insert(0, 'No.', range(1, len(combined_df) + 1))
 
-        # Apply string replacements to all string fields
-        def replace_patterns(val):
-            if isinstance(val, str):
-                return val.replace('R10000', 'R10').replace('000000', '0000')
-            return val
-
-        combined_df = combined_df.applymap(replace_patterns)
-
         # Perform SID lookup if Excel uploaded
         if uploaded_lookup_file:
             try:
@@ -75,6 +67,17 @@ if uploaded_txt_files and st.button("Process Files"):
                     st.warning("Lookup file must contain columns 'SID' and 'Account'.")
             except Exception as e:
                 st.error(f"Error reading lookup file: {e}")
+
+        # Fix formatting in 'Account' column only for preview table
+        if 'Account' in preview_df.columns:
+            def clean_account(val):
+                if isinstance(val, str):
+                    val = val.replace('000000', '0000')
+                    if val.startswith('R10000'):
+                        val = 'R10' + val[6:]
+                return val
+
+            preview_df['Account'] = preview_df['Account'].apply(clean_account)
 
         preview_df = combined_df.copy()
 
