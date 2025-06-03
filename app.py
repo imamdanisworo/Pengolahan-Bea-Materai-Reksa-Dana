@@ -68,6 +68,8 @@ if uploaded_txt_files and st.button("Process Files"):
             except Exception as e:
                 st.error(f"Error reading lookup file: {e}")
 
+        preview_df = combined_df.copy()
+
         # Fix formatting in 'Account' column only for preview table
         if 'Account' in preview_df.columns:
             def clean_account(val):
@@ -78,8 +80,6 @@ if uploaded_txt_files and st.button("Process Files"):
                 return val
 
             preview_df['Account'] = preview_df['Account'].apply(clean_account)
-
-        preview_df = combined_df.copy()
 
         def format_number(val):
             try:
@@ -103,7 +103,7 @@ if uploaded_txt_files and st.button("Process Files"):
         # Excel Export Section
         output = io.BytesIO()
         with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-            combined_df.to_excel(writer, index=False, sheet_name='CombinedData')
+            preview_df.to_excel(writer, index=False, sheet_name='CombinedData')
             workbook = writer.book
             worksheet = writer.sheets['CombinedData']
 
