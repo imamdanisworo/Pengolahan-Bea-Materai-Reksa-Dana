@@ -1,11 +1,16 @@
-# Streamlit App: Combine Multiple Text Files into One Excel Sheet
+# Streamlit App: Combine Multiple Pipe-Separated TXT Files into One Excel Sheet
 import streamlit as st
 import pandas as pd
 import io
-from zipfile import ZipFile
 
 # App title
 st.title("Combine Multiple TXT Files into One Excel Sheet")
+
+# Instructions
+st.markdown("""
+Upload multiple `.txt` files where data columns are separated using the pipe character (`|`). 
+Each file must have a header row and consistent column structure.
+""")
 
 # File uploader
 uploaded_files = st.file_uploader("Upload TXT files", type="txt", accept_multiple_files=True)
@@ -15,26 +20,29 @@ if uploaded_files:
 
     for file in uploaded_files:
         try:
-            df = pd.read_csv(file, delimiter='\t', engine='python')
-            df['source_file'] = file.name
+            # Read file with pipe delimiter
+            df = pd.read_csv(file, delimiter='|', encoding='utf-8')
+            df['source_file'] = file.name  # Optional: add column for source tracking
             combined_df = pd.concat([combined_df, df], ignore_index=True)
         except Exception as e:
             st.error(f"Error reading {file.name}: {e}")
 
-    st.success("Files combined successfully!")
-    st.dataframe(combined_df)
+    # Display and download section
+    if not combined_df.empty:
+        st.success("Files combined successfully!")
+        st.dataframe(combined_df.head())
 
-    # Download button for Excel
-    output = io.BytesIO()
-    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-        combined_df.to_excel(writer, index=False, sheet_name='CombinedData')
-    output.seek(0)
+        # Convert to Excel and provide download
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+            combined_df.to_excel(writer, index=False, sheet_name='CombinedData')
+        output.seek(0)
 
-    st.download_button(
-        label="Download Combined Excel File",
-        data=output,
-        file_name="combined_data.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
+        st.download_button(
+            label="Download Combined Excel File",
+            data=output,
+            file_name="combined_data.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
 else:
     st.info("Please upload one or more .txt files to begin.")
