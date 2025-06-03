@@ -30,7 +30,7 @@ if uploaded_files:
     # Display and download section
     if not combined_df.empty:
         st.success("Files combined successfully!")
-        st.dataframe(combined_df.head())
+        st.dataframe(combined_df, use_container_width=True)
 
         # Convert to Excel and provide download
         output = io.BytesIO()
