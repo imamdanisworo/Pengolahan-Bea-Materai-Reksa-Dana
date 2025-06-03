@@ -46,6 +46,20 @@ if uploaded_txt_files:
             combined_df.drop(columns=['No.'], inplace=True)
         combined_df.insert(0, 'No.', range(1, len(combined_df) + 1))
 
+        # Perform SID lookup if Excel uploaded
+        if uploaded_lookup_file:
+            try:
+                lookup_df = pd.read_excel(uploaded_lookup_file, dtype=str)
+                if 'SID' in lookup_df.columns and 'Account' in lookup_df.columns:
+                    combined_df['SID Number'] = combined_df['SID Number'].astype(str)
+                    lookup_df['SID'] = lookup_df['SID'].astype(str)
+                    combined_df = combined_df.merge(lookup_df[['SID', 'Account']], how='left', left_on='SID Number', right_on='SID')
+                    combined_df.drop(columns=['SID'], inplace=True)
+                else:
+                    st.warning("Lookup file must contain columns 'SID' and 'Account'.")
+            except Exception as e:
+                st.error(f"Error reading lookup file: {e}")
+
         preview_df = combined_df.copy()
 
         def format_number(val):
