@@ -77,6 +77,8 @@ if uploaded_txt_files and st.button("Process Files"):
                     val = val.replace('000000', '0000')
                     if val.startswith('R10000'):
                         val = 'R10' + val[6:]
+                    if val.startswith('S10000'):
+                        val = 'S10' + val[6:]
                 return val
 
             preview_df['Account'] = preview_df['Account'].apply(clean_account)
@@ -108,11 +110,11 @@ if uploaded_txt_files and st.button("Process Files"):
             worksheet = writer.sheets['CombinedData']
 
             number_format = workbook.add_format({"num_format": "#,##0.00"})
-            for col_idx, col_name in enumerate(combined_df.columns):
+            for col_idx, col_name in enumerate(preview_df.columns):
                 if col_name in ['Stamp Duty Fee', 'Gross Transaction Amount (IDR Equivalent)']:
                     worksheet.set_column(col_idx, col_idx, 20, number_format)
                 else:
-                    series = combined_df[col_name].astype(str)
+                    series = preview_df[col_name].astype(str)
                     max_len = max(series.map(len).max(), len(str(col_name))) + 2
                     worksheet.set_column(col_idx, col_idx, max_len)
 
