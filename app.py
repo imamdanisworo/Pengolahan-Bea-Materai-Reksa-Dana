@@ -47,6 +47,14 @@ if uploaded_txt_files and st.button("Process Files"):
             combined_df.drop(columns=['No.'], inplace=True)
         combined_df.insert(0, 'No.', range(1, len(combined_df) + 1))
 
+        # Apply string replacements to all string fields
+        def replace_patterns(val):
+            if isinstance(val, str):
+                return val.replace('R10000', 'R10').replace('000000', '0000')
+            return val
+
+        combined_df = combined_df.applymap(replace_patterns)
+
         # Perform SID lookup if Excel uploaded
         if uploaded_lookup_file:
             try:
