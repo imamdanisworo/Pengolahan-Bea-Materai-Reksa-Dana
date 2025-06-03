@@ -33,8 +33,9 @@ if uploaded_files:
         if 'source_file' in combined_df.columns:
             combined_df.drop(columns=['source_file'], inplace=True)
 
-        # Add auto-number column "No."
-        combined_df.insert(0, 'No.', range(1, len(combined_df) + 1))
+        # Add auto-number column "No." if it doesn't exist
+        if 'No.' not in combined_df.columns:
+            combined_df.insert(0, 'No.', range(1, len(combined_df) + 1))
 
         st.success("Files combined successfully!")
         st.dataframe(combined_df, use_container_width=True)
