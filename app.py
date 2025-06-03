@@ -46,22 +46,23 @@ if uploaded_files:
                 if val.is_integer():
                     return f"{int(val):,}"
                 else:
-                    return f"{val:,.{str(val)[::-1].find('.') if '.' in str(val) else 2}f}".rstrip('0').rstrip('.')
+                    return f"{val:,}".rstrip('0').rstrip('.')
             except:
                 return ""
 
+        formatted_df = combined_df.copy()
         for col in ['Gross Transaction Amount IDR', 'Stamp Duty Fee']:
-            if col in combined_df.columns:
-                combined_df[col] = pd.to_numeric(combined_df[col], errors='coerce')
-                combined_df[col] = combined_df[col].apply(format_number)
+            if col in formatted_df.columns:
+                formatted_df[col] = pd.to_numeric(formatted_df[col], errors='coerce')
+                formatted_df[col] = formatted_df[col].apply(format_number)
 
         st.success("Files combined successfully!")
-        st.dataframe(combined_df, use_container_width=True)
+        st.dataframe(formatted_df, use_container_width=True)
 
-        # Convert to Excel and provide download
+        # Convert to Excel and provide download using formatted display values
         output = io.BytesIO()
         with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-            combined_df.to_excel(writer, index=False, sheet_name='CombinedData')
+            formatted_df.to_excel(writer, index=False, sheet_name='CombinedData')
         output.seek(0)
 
         st.download_button(
