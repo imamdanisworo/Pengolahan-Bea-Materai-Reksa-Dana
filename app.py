@@ -39,7 +39,9 @@ if uploaded_files:
             combined_df.drop(columns=['No.'], inplace=True)
         combined_df.insert(0, 'No.', range(1, len(combined_df) + 1))
 
-        # Format numeric columns with full value if > 2 decimals, else up to 2 decimals
+        # Preserve numeric precision before formatting for export only
+        preview_df = combined_df.copy()
+
         def format_number(val):
             try:
                 val = float(val)
@@ -50,19 +52,19 @@ if uploaded_files:
             except:
                 return ""
 
-        formatted_df = combined_df.copy()
+        display_df = preview_df.copy()
         for col in ['Stamp Duty Fee', 'Gross Transaction Amount (IDR Equivalent)']:
-            if col in formatted_df.columns:
-                formatted_df[col] = pd.to_numeric(formatted_df[col], errors='coerce')
-                formatted_df[col] = formatted_df[col].apply(format_number)
+            if col in display_df.columns:
+                display_df[col] = pd.to_numeric(display_df[col], errors='coerce')
+                display_df[col] = display_df[col].apply(format_number)
 
         st.success("Files combined successfully!")
-        st.dataframe(formatted_df, use_container_width=True)
+        st.dataframe(display_df, use_container_width=True)
 
-        # Convert to Excel and provide download using formatted display values
+        # Export the original, unformatted combined_df to preserve full decimal precision
         output = io.BytesIO()
         with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-            formatted_df.to_excel(writer, index=False, sheet_name='CombinedData')
+            combined_df.to_excel(writer, index=False, sheet_name='CombinedData')
         output.seek(0)
 
         st.download_button(
