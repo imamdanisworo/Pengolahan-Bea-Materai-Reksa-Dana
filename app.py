@@ -8,7 +8,7 @@ st.set_page_config(page_title="Materai TXT to Excel Tool", layout="wide")
 st.title("📄 Materai TXT to Excel Tool")
 
 st.markdown("""
-Upload multiple `.txt` files (pipe `|` separated). Then upload an Excel file for SID-Account lookup.  
+Upload multiple `.txt` files (pipe `|` separated). Then upload an Excel file for SID-Cust ID lookup.  
 Click **✅ Process Files** to preview and **⬇️ Download** the results.
 """)
 
@@ -41,12 +41,12 @@ if uploaded_txt_files and process_button:
             combined_df['SID Number'] = combined_df['SID Number'].astype(str)
             lookup_df['SID'] = lookup_df['SID'].astype(str)
             combined_df = combined_df.merge(
-                lookup_df[['SID', 'Account']],
+                lookup_df[['SID', 'Cust ID']],
                 how='left',
                 left_on='SID Number',
                 right_on='SID',
                 validate='many_to_one'
-            ).drop(columns=['SID'])
+            ).rename(columns={'Cust ID': 'Account'}).drop(columns=['SID'])
         except Exception as e:
             st.error(f"❌ Error reading lookup file: {e}")
 
