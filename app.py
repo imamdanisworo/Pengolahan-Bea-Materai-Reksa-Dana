@@ -64,7 +64,7 @@ if uploaded_files:
         # Export the original, unformatted combined_df to preserve full decimal precision
         output = io.BytesIO()
         with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-            combined_df.to_excel(writer, index=False, sheet_name='CombinedData')
+            display_df.to_excel(writer, index=False, sheet_name='CombinedData')
         output.seek(0)
 
         st.download_button(
