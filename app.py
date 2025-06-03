@@ -39,7 +39,9 @@ if uploaded_files:
             combined_df.drop(columns=['No.'], inplace=True)
         combined_df.insert(0, 'No.', range(1, len(combined_df) + 1))
 
-        # Prepare formatted copy for display
+        # Preserve numeric precision before formatting for export only
+        preview_df = combined_df.copy()
+
         def format_number(val):
             try:
                 val = float(val)
@@ -50,7 +52,7 @@ if uploaded_files:
             except:
                 return ""
 
-        display_df = combined_df.copy()
+        display_df = preview_df.copy()
         for col in ['Stamp Duty Fee', 'Gross Transaction Amount (IDR Equivalent)']:
             if col in display_df.columns:
                 display_df[col] = pd.to_numeric(display_df[col], errors='coerce')
@@ -59,25 +61,18 @@ if uploaded_files:
         st.success("Files combined successfully!")
         st.dataframe(display_df, use_container_width=True)
 
-        # Create Excel file using XlsxWriter and apply number formatting
+        # Export to Excel with formatted display values and auto column width
         output = io.BytesIO()
         with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-            combined_df.to_excel(writer, index=False, sheet_name='CombinedData', startrow=1, header=False)
-
+            display_df.to_excel(writer, index=False, sheet_name='CombinedData')
             workbook = writer.book
             worksheet = writer.sheets['CombinedData']
 
-            # Write header manually with bold format
-            header_format = workbook.add_format({'bold': True, 'bg_color': '#F9F9F9'})
-            for col_num, value in enumerate(combined_df.columns):
-                worksheet.write(0, col_num, value, header_format)
-
-            # Apply number format with separator to relevant columns
-            number_format = workbook.add_format({'num_format': '#,##0.00'})
-            for col in ['Stamp Duty Fee', 'Gross Transaction Amount (IDR Equivalent)']:
-                if col in combined_df.columns:
-                    col_idx = combined_df.columns.get_loc(col)
-                    worksheet.set_column(col_idx, col_idx, 20, number_format)
+            # Auto-adjust column widths
+            for i, col in enumerate(display_df.columns):
+                series = display_df[col].astype(str)
+                max_len = max(series.map(len).max(), len(str(col))) + 2
+                worksheet.set_column(i, i, max_len)
 
         output.seek(0)
 
