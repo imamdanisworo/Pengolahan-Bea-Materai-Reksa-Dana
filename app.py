@@ -51,7 +51,7 @@ if uploaded_files:
                 return ""
 
         formatted_df = combined_df.copy()
-        for col in ['Gross Transaction Amount IDR', 'Stamp Duty Fee', 'Fross Transaction Amount (IDR Equivalent)']:
+        for col in ['Stamp Duty Fee', 'Gross Transaction Amount (IDR Equivalent)']:
             if col in formatted_df.columns:
                 formatted_df[col] = pd.to_numeric(formatted_df[col], errors='coerce')
                 formatted_df[col] = formatted_df[col].apply(format_number)
