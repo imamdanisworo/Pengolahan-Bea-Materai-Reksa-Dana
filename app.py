@@ -1,45 +1,51 @@
-# Streamlit App: Combine Multiple Pipe-Separated TXT Files into One Excel Sheet
+# Streamlit App: Combine Multiple Pipe-Separated TXT Files into One Excel Sheet with Lookup
 import streamlit as st
 import pandas as pd
 import io
 
 # App title
-st.title("Combine Multiple TXT Files into One Excel Sheet")
+st.title("Combine Multiple TXT Files into One Excel Sheet with Lookup")
 
 # Instructions
 st.markdown("""
-Upload multiple `.txt` files where data columns are separated using the pipe character (`|`). 
+Upload multiple `.txt` files where data columns are separated using the pipe character (`|`).
 Each file must have a header row and consistent column structure.
+Additionally, you may upload an Excel file to provide lookup values.
 """)
 
-# File uploader
-uploaded_files = st.file_uploader("Upload TXT files", type="txt", accept_multiple_files=True)
+# Split layout into two columns
+col1, col2 = st.columns(2)
 
-if uploaded_files:
+# Left: TXT file uploader
+with col1:
+    st.subheader("Upload TXT Files")
+    uploaded_txt_files = st.file_uploader("Upload TXT files", type="txt", accept_multiple_files=True, key="txt")
+
+# Right: Excel lookup uploader
+with col2:
+    st.subheader("Upload Excel Lookup File")
+    uploaded_lookup_file = st.file_uploader("Upload Excel file for lookup values", type=["xlsx", "xls"], key="lookup")
+
+if uploaded_txt_files:
     combined_df = pd.DataFrame()
 
-    for file in uploaded_files:
+    for file in uploaded_txt_files:
         try:
-            # Read file with pipe delimiter
             df = pd.read_csv(file, delimiter='|', encoding='utf-8')
-            df['source_file'] = file.name  # Optional: add column for source tracking
+            df['source_file'] = file.name
             combined_df = pd.concat([combined_df, df], ignore_index=True)
         except Exception as e:
             st.error(f"Error reading {file.name}: {e}")
 
-    # Display and download section
     if not combined_df.empty:
-        # Remove 'source_file' column if it exists
         if 'source_file' in combined_df.columns:
             combined_df.drop(columns=['source_file'], inplace=True)
 
-        # Reset index and insert auto-number column "No."
         combined_df.reset_index(drop=True, inplace=True)
         if 'No.' in combined_df.columns:
             combined_df.drop(columns=['No.'], inplace=True)
         combined_df.insert(0, 'No.', range(1, len(combined_df) + 1))
 
-        # Create a display version of DataFrame with formatted numbers
         preview_df = combined_df.copy()
 
         def format_number(val):
@@ -61,14 +67,13 @@ if uploaded_files:
         st.success("Files combined successfully!")
         st.dataframe(display_df, use_container_width=True)
 
-        # Export with true numbers & thousand separator Excel format
+        # Excel Export Section
         output = io.BytesIO()
         with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
             combined_df.to_excel(writer, index=False, sheet_name='CombinedData')
             workbook = writer.book
             worksheet = writer.sheets['CombinedData']
 
-            # Format numbers as true numerics with thousand separator
             number_format = workbook.add_format({"num_format": "#,##0.00"})
             for col_idx, col_name in enumerate(combined_df.columns):
                 if col_name in ['Stamp Duty Fee', 'Gross Transaction Amount (IDR Equivalent)']:
@@ -79,7 +84,6 @@ if uploaded_files:
                     worksheet.set_column(col_idx, col_idx, max_len)
 
         output.seek(0)
-
         st.download_button(
             label="Download Combined Excel File",
             data=output,
