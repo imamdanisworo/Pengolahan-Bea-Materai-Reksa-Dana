@@ -18,20 +18,23 @@ with st.sidebar:
     uploaded_lookup_file = st.file_uploader("Upload Excel SID Lookup File", type=["xlsx", "xls"])
     process_button = st.button("✅ Process Files")
 
+# Session state to persist across reruns
+if 'display_df' not in st.session_state:
+    st.session_state.display_df = None
+if 'combined_df' not in st.session_state:
+    st.session_state.combined_df = None
+
 if uploaded_txt_files and process_button:
     st.info("Processing files... Please wait.")
-    
-    # Combine TXT files
+
     combined_df = pd.concat([
         pd.read_csv(file, delimiter='|', encoding='utf-8').assign(source_file=file.name)
         for file in uploaded_txt_files
     ], ignore_index=True)
 
-    # Drop unused and add No. column
     combined_df.drop(columns=[col for col in ['source_file', 'No.'] if col in combined_df.columns], inplace=True)
     combined_df.insert(0, 'No.', range(1, len(combined_df) + 1))
 
-    # Merge lookup
     if uploaded_lookup_file:
         try:
             lookup_df = pd.read_excel(uploaded_lookup_file, dtype=str).drop_duplicates(subset='SID')
@@ -47,7 +50,6 @@ if uploaded_txt_files and process_button:
         except Exception as e:
             st.error(f"❌ Error reading lookup file: {e}")
 
-    # Build Description
     if 'Transaction Type' in combined_df.columns and 'Transaction Date' in combined_df.columns:
         def build_description(row):
             ttype = str(row['Transaction Type'])
@@ -59,7 +61,6 @@ if uploaded_txt_files and process_button:
                 return f"Materai - {label} at {row['Transaction Date']}"
         combined_df['Description'] = combined_df.apply(build_description, axis=1)
 
-    # Clean Account column
     if 'Account' in combined_df.columns:
         def clean_account(val):
             if isinstance(val, str):
@@ -71,7 +72,6 @@ if uploaded_txt_files and process_button:
             return val
         combined_df['Account'] = combined_df['Account'].apply(clean_account)
 
-    # Format numbers for preview
     def format_number(val):
         try:
             val = float(val)
@@ -84,22 +84,25 @@ if uploaded_txt_files and process_button:
         if col in display_df.columns:
             display_df[col] = pd.to_numeric(display_df[col], errors='coerce').apply(format_number)
 
+    st.session_state.display_df = display_df
+    st.session_state.combined_df = combined_df
     st.success("✅ Files combined successfully!")
-    st.dataframe(display_df, use_container_width=True, height=600)
 
-    # Excel Export
+if st.session_state.display_df is not None:
+    st.dataframe(st.session_state.display_df, use_container_width=True, height=600)
+
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-        combined_df.to_excel(writer, index=False, sheet_name='CombinedData')
+        st.session_state.combined_df.to_excel(writer, index=False, sheet_name='CombinedData')
         workbook = writer.book
         worksheet = writer.sheets['CombinedData']
 
         number_format = workbook.add_format({"num_format": "#,##0.00"})
-        for col_idx, col_name in enumerate(combined_df.columns):
+        for col_idx, col_name in enumerate(st.session_state.combined_df.columns):
             if col_name in ['Stamp Duty Fee', 'Gross Transaction Amount (IDR Equivalent)']:
                 worksheet.set_column(col_idx, col_idx, 20, number_format)
             else:
-                max_len = max(combined_df[col_name].astype(str).map(len).max(), len(str(col_name))) + 2
+                max_len = max(st.session_state.combined_df[col_name].astype(str).map(len).max(), len(str(col_name))) + 2
                 worksheet.set_column(col_idx, col_idx, max_len)
 
     output.seek(0)
