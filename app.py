@@ -29,6 +29,13 @@ if uploaded_files:
 
     # Display and download section
     if not combined_df.empty:
+        # Remove 'source_file' column if it exists
+        if 'source_file' in combined_df.columns:
+            combined_df.drop(columns=['source_file'], inplace=True)
+
+        # Add auto-number column "No."
+        combined_df.insert(0, 'No.', range(1, len(combined_df) + 1))
+
         st.success("Files combined successfully!")
         st.dataframe(combined_df, use_container_width=True)
 
