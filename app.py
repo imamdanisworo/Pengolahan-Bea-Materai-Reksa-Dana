@@ -39,11 +39,21 @@ if uploaded_files:
             combined_df.drop(columns=['No.'], inplace=True)
         combined_df.insert(0, 'No.', range(1, len(combined_df) + 1))
 
-        # Format numeric columns
+        # Format numeric columns with optional decimals
+        def format_number(val):
+            try:
+                val = float(val)
+                if val.is_integer():
+                    return f"{int(val):,}"
+                else:
+                    return f"{val:,.2f}"
+            except:
+                return ""
+
         for col in ['Gross Transaction Amount IDR', 'Stamp Duty Fee']:
             if col in combined_df.columns:
                 combined_df[col] = pd.to_numeric(combined_df[col], errors='coerce')
-                combined_df[col] = combined_df[col].map(lambda x: f"{x:,.2f}" if pd.notnull(x) else "")
+                combined_df[col] = combined_df[col].apply(format_number)
 
         st.success("Files combined successfully!")
         st.dataframe(combined_df, use_container_width=True)
