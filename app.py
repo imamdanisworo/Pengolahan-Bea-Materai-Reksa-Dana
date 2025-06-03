@@ -54,7 +54,13 @@ if uploaded_txt_files and st.button("Process Files"):
                 if 'SID' in lookup_df.columns and 'Account' in lookup_df.columns:
                     combined_df['SID Number'] = combined_df['SID Number'].astype(str)
                     lookup_df['SID'] = lookup_df['SID'].astype(str)
-                    combined_df = combined_df.merge(lookup_df[['SID', 'Account']], how='left', left_on='SID Number', right_on='SID')
+                    combined_df = combined_df.merge(
+                        lookup_df[['SID', 'Account']],
+                        how='left',
+                        left_on='SID Number',
+                        right_on='SID',
+                        validate='many_to_one'
+                    )
                     combined_df.drop(columns=['SID'], inplace=True)
                 else:
                     st.warning("Lookup file must contain columns 'SID' and 'Account'.")
