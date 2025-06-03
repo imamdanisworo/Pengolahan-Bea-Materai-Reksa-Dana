@@ -1,4 +1,4 @@
-# Final locked version with auto-clear after download or upload
+# Final locked version with auto-clear after download
 import streamlit as st
 import pandas as pd
 import io
@@ -11,9 +11,6 @@ st.markdown("""
 Upload multiple `.txt` files (pipe `|` separated). Then upload an Excel file for SID-Account lookup.
 Click **Process Files** to preview and download the results. After download, files will auto-clear.
 """)
-
-
-
 
 col1, col2 = st.columns(2)
 
@@ -108,16 +105,16 @@ if uploaded_txt_files and st.button("Process Files"):
                 worksheet.set_column(col_idx, col_idx, max_len)
 
     output.seek(0)
-    if st.download_button(
+    download_clicked = st.download_button(
         label="Download Combined Excel File",
         data=output,
         file_name="combined_data.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    ):
-        st.experimental_set_query_params()
-        st.success("File downloaded. You may now upload a new set of files.")
-        st.stop()
     )
+
+    if download_clicked:
+        st.info("Upload slots have been reset. Please reupload if needed.")
+        st.stop()
 else:
     if not uploaded_txt_files:
         st.info("Please upload one or more .txt files to begin.")
