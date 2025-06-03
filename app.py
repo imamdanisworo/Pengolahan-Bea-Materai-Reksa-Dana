@@ -52,6 +52,7 @@ if uploaded_txt_files and st.button("Process Files"):
             try:
                 lookup_df = pd.read_excel(uploaded_lookup_file, dtype=str)
                 if 'SID' in lookup_df.columns and 'Account' in lookup_df.columns:
+                    lookup_df = lookup_df.drop_duplicates(subset='SID')
                     combined_df['SID Number'] = combined_df['SID Number'].astype(str)
                     lookup_df['SID'] = lookup_df['SID'].astype(str)
                     combined_df = combined_df.merge(
