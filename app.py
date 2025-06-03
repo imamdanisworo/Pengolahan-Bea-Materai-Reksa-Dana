@@ -39,7 +39,7 @@ if uploaded_files:
             combined_df.drop(columns=['No.'], inplace=True)
         combined_df.insert(0, 'No.', range(1, len(combined_df) + 1))
 
-        # Preserve numeric precision before formatting for export only
+        # Create a display version of DataFrame with formatted numbers
         preview_df = combined_df.copy()
 
         def format_number(val):
@@ -61,18 +61,22 @@ if uploaded_files:
         st.success("Files combined successfully!")
         st.dataframe(display_df, use_container_width=True)
 
-        # Export to Excel with formatted display values and auto column width
+        # Export with true numbers & thousand separator Excel format
         output = io.BytesIO()
         with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-            display_df.to_excel(writer, index=False, sheet_name='CombinedData')
+            combined_df.to_excel(writer, index=False, sheet_name='CombinedData')
             workbook = writer.book
             worksheet = writer.sheets['CombinedData']
 
-            # Auto-adjust column widths
-            for i, col in enumerate(display_df.columns):
-                series = display_df[col].astype(str)
-                max_len = max(series.map(len).max(), len(str(col))) + 2
-                worksheet.set_column(i, i, max_len)
+            # Format numbers as true numerics with thousand separator
+            number_format = workbook.add_format({"num_format": "#,##0.00"})
+            for col_idx, col_name in enumerate(combined_df.columns):
+                if col_name in ['Stamp Duty Fee', 'Gross Transaction Amount (IDR Equivalent)']:
+                    worksheet.set_column(col_idx, col_idx, 20, number_format)
+                else:
+                    series = combined_df[col_name].astype(str)
+                    max_len = max(series.map(len).max(), len(str(col_name))) + 2
+                    worksheet.set_column(col_idx, col_idx, max_len)
 
         output.seek(0)
 
