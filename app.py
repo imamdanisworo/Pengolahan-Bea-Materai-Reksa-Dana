@@ -26,7 +26,8 @@ with col2:
     st.subheader("Upload Excel Lookup File")
     uploaded_lookup_file = st.file_uploader("Upload Excel file for lookup values", type=["xlsx", "xls"], key="lookup")
 
-if uploaded_txt_files:
+# Process button
+if uploaded_txt_files and st.button("Process Files"):
     combined_df = pd.DataFrame()
 
     for file in uploaded_txt_files:
@@ -105,4 +106,5 @@ if uploaded_txt_files:
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
 else:
-    st.info("Please upload one or more .txt files to begin.")
+    if not uploaded_txt_files:
+        st.info("Please upload one or more .txt files to begin.")
