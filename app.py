@@ -16,11 +16,11 @@ col1, col2 = st.columns(2)
 
 with col1:
     st.subheader("Upload TXT Files")
-    uploaded_txt_files = st.file_uploader("TXT files", type="txt", accept_multiple_files=True, key="txt")
+    uploaded_txt_files = st.file_uploader("TXT files", type="txt", accept_multiple_files=True, key=str(st.session_state.get('txt_key', 'txt')))
 
 with col2:
     st.subheader("Upload Excel Lookup File")
-    uploaded_lookup_file = st.file_uploader("Excel file for SID lookup", type=["xlsx", "xls"], key="lookup")
+    uploaded_lookup_file = st.file_uploader("Excel file for SID lookup", type=["xlsx", "xls"], key=str(st.session_state.get('lookup_key', 'lookup')))
 
 if uploaded_txt_files and st.button("Process Files"):
     combined_df = pd.concat([
@@ -113,8 +113,9 @@ if uploaded_txt_files and st.button("Process Files"):
     )
 
     if download_clicked:
-        st.info("Upload slots have been reset. Please reupload if needed.")
-        st.stop()
+        st.session_state.txt_key = 'txt' + str(pd.Timestamp.now().timestamp())
+        st.session_state.lookup_key = 'lookup' + str(pd.Timestamp.now().timestamp())
+        st.experimental_rerun()
 else:
     if not uploaded_txt_files:
         st.info("Please upload one or more .txt files to begin.")
