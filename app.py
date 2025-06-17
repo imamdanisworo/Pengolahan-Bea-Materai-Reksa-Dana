@@ -1,4 +1,3 @@
-# Final locked version (no reset upload)
 import streamlit as st
 import pandas as pd
 import io
@@ -46,7 +45,7 @@ if uploaded_txt_files and process_button:
                 left_on='SID Number',
                 right_on='SID',
                 validate='many_to_one'
-            ).rename(columns={'Cust ID': 'Account'}).drop(columns=['SID'])
+            ).drop(columns=['SID'])
         except Exception as e:
             st.error(f"❌ Error reading lookup file: {e}")
 
@@ -60,17 +59,6 @@ if uploaded_txt_files and process_button:
             except:
                 return f"Materai - {label} at {row['Transaction Date']}"
         combined_df['Description'] = combined_df.apply(build_description, axis=1)
-
-    if 'Account' in combined_df.columns:
-        def clean_account(val):
-            if isinstance(val, str):
-                val = val.replace('000000', '0000')
-                if val.startswith('R10000'):
-                    val = 'R10' + val[6:]
-                if val.startswith('S10000'):
-                    val = 'S10' + val[6:]
-            return val
-        combined_df['Account'] = combined_df['Account'].apply(clean_account)
 
     def format_number(val):
         try:
